@@ -8,7 +8,15 @@
     window[Ps].module("Filter.embossment",function(P){
 
         var M = {
-            process: function(imgData,arg){//调节亮度对比度
+            process: function(imgData, arg, mode){//调节亮度对比度
+               if (mode == "webcl")
+                   this.processCL(imgData, arg);
+               else
+                   this.processJS(imgData, arg);
+            },
+
+            processJS: function(imgData, arg){
+                var startTime = (new Date()).getTime();
                 var data = imgData.data;
                 var width = imgData.width;
                 var height = imgData.height;
@@ -33,7 +41,14 @@
                     data[i] = outData[i] || data[i];
                 }
 
+                console.log("embossmentJS: " + ((new Date()).getTime() - startTime));
+                return imgData;
+            },
 
+            processCL: function(imgData, arg){//调节亮度对比度 （WebCL版本）
+                var startTime = (new Date()).getTime();
+
+                console.log("embossmentCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }
         };

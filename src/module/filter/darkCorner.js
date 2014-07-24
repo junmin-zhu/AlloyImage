@@ -8,8 +8,16 @@
     window[Ps].module("Filter.darkCorner", function(P){
 
         var M = {
-            process: function(imgData,arg){
+            process: function(imgData, arg, mode){
+               if (mode == "webcl")
+                   this.processCL(imgData, arg);
+               else
+                   this.processJS(imgData, arg);
+            },
+
+            processJS: function(imgData, arg){
                 //暗角级别 分1-10级吧
+                var startTime = (new Date()).getTime();
                 var R = parseInt(arg[0]) || 3;
 
                 //暗角的形状
@@ -64,7 +72,13 @@
 
                 }
 
+                console.log("darkcornerJS: " + ((new Date()).getTime() - startTime));
+                return imgData;
+            },
 
+            processCL: function(imgData, arg){
+                var startTime = (new Date()).getTime(); 
+                console.log("darkcornerCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }
         };

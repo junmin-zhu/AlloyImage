@@ -88,7 +88,7 @@ try{
                 //递归出口
                 if(count == moduleArr.length - 1){
                     obj[attr] = func.call(null, _this);
-
+                    console.log(attr + ":" + count);
                     return;
                 }
 
@@ -131,16 +131,16 @@ try{
 
             var spaceName = moduleName.spaceName;
             var actName = moduleName.actName;
-
+            console.log("moduleName " + moduleName + "; spaceName " + spaceName + "; actName " + actName);
             switch(spaceName){
                 case "Filter":
                 case "Alteration":
 
-                    return this.lib[spaceName][actName].process(imgData, args);
+                    return this.lib[spaceName][actName].process(imgData, args, "webcl");
                     //break;
 
                 case "ComEffect":
-                    return this.lib[actName].process(imgData, args);
+                    return this.lib[actName].process(imgData, args, "webcl");
                     //break;
 
                 default:
@@ -174,7 +174,7 @@ try{
             var actMethod = Array.prototype.shift.call(args);
 
             if(this.lib.Tools[actMethod]){
-                return this.lib.Tools[actMethod].process(imgData, args);
+                return this.lib.Tools[actMethod].process(imgData, args, "webcl");
             }else{
                 throw new Error("AI_ERROR: 不存在的工具方法_" + actMethod);
             }

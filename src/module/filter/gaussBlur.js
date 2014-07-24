@@ -18,7 +18,14 @@
              * @param  {Number} sigma 标准方差, 可选, 默认取值为 radius / 3
              * @return {Array}
              */
-            process: function(imgData,radius, sigma) {
+            process: function(imgData, radius, sigma, mode) {
+                if (mode == "webcl")
+                    this.processCL(imgData, radius, sigma);
+                else
+                    this.processJS(imgData, radius, sigma);
+            },
+
+            processJS: function(imgData,radius, sigma) {
                 var pixes = imgData.data;
                 var width = imgData.width;
                 var height = imgData.height;
@@ -28,7 +35,7 @@
                     r, g, b, a,
                     i, j, k, len;
 
-
+                var startTime = (new Date()).getTime();
                 radius = Math.floor(radius) || 3;
                 sigma = sigma || radius / 3;
                 
@@ -99,6 +106,14 @@
                 }
                 //end
                 imgData.data = pixes;
+                console.log("gaussBlurJS: " + ((new Date()).getTime() - startTime));
+                return imgData;
+            },
+
+            processCL: function(imgData,radius, sigma) {
+                var startTime = (new Date()).getTime();
+
+                console.log("gaussBlurCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }
         };

@@ -11,7 +11,15 @@
     window[Ps].module("Alteration.setHSI",function(P){
 
         var M = {
-            process: function(imgData,arg){//调节亮度对比度
+            process: function(imgData, arg, mode){//调节亮度对比度
+               if (mode == "webcl")
+                   this.processCL(imgData, arg);
+               else
+                   this.processJS(imgData, arg);
+            },
+
+            processJS: function(imgData, arg){
+                var startTime = (new Date()).getTime();
                 arg[0] = arg[0] / 180 * Math.PI;
                 arg[1] = arg[1] / 100 || 0;
                 arg[2] = arg[2] / 100 * 255 || 0;
@@ -44,7 +52,13 @@
                     }
 
                 });
+                console.log("setHSIJS: " + ((new Date()).getTime() - startTime));
+                return imgData;
+            },
 
+            processCL: function(imgData,arg){//调节亮度对比度
+                var startTime = (new Date()).getTime();
+                console.log("setHSICL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }
         };

@@ -8,11 +8,18 @@
     window[Ps].module("Alteration.curve", function(P){
 
         var M = {
-            process: function(imgData, arg){
+            process: function(imgData, arg, mode){
+               if (mode == "webcl")
+                   this.processCL(imgData, arg);
+               else
+                   this.processJS(imgData, arg);
+            },
+
+            processJS: function(imgData, arg){
                 /*
                  * arg   arg[0] = [3,3] ,arg[1]  = [2,2]
                  * */
-
+                var startTime = (new Date()).getTime();
                 //获得插值函数
                 var f = P.lib.dorsyMath.lagrange(arg[0], arg[1]);
                 var data = imgData.data;
@@ -48,7 +55,16 @@
                     }
 
                 }
+                console.log("curveJS: " + ((new Date()).getTime() - startTime));
+                return imgData;
+            },
 
+            processCL: function(imgData, arg){
+                /*
+                 * arg   arg[0] = [3,3] ,arg[1]  = [2,2]
+                 * */
+                var startTime = (new Date()).getTime();
+                console.log("curveCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }
         };

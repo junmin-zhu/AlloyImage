@@ -8,7 +8,15 @@
     window[Ps].module("Filter.borderline",function(P){
 
         var M = {
-            process: function(imgData,arg){
+            process: function(imgData, arg, mode){
+                if (mode == "webcl")
+                    this.processCL(imgData, arg);
+                else
+                    this.processJS(imgData, arg);
+            },
+
+            processJS: function(imgData, arg){
+                var startTime = (new Date()).getTime();
                 var template1 = [
                     -2,-4,-4,-4,-2,
                     -4,0,8,0,-4,
@@ -23,7 +31,15 @@
                 ];
                 var template3 = [
                 ];
-                return P.lib.dorsyMath.applyMatrix(imgData,template2,250);
+                var result = P.lib.dorsyMath.applyMatrix(imgData,template2,250);
+                console.log("borderlineJS: " + ((new Date()).getTime() - startTime));
+                return result;
+            },
+
+            processCL: function(imgData,arg){
+                var startTime = (new Date()).getTime();
+                console.log("borderlineCL: " + ((new Date()).getTime() - startTime));
+                return imgData;
             }
         };
 

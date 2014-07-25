@@ -8,7 +8,7 @@
     window[Ps].module("Filter.embossment",function(P){
 
         var M = {
-            process: function(imgData, arg, mode){//调节亮度对比度
+            process: function(imgData, arg, mode){
                if (mode)
                    this.processCL(imgData, arg);
                else
@@ -45,7 +45,7 @@
                 return imgData;
             },
 
-            processCL: function(imgData, arg){//调节亮度对比度 （WebCL版本）
+            processCL: function(imgData, arg){//（WebCL版本）
                 var startTime = (new Date()).getTime();
 
                 console.log("embossmentCL: " + ((new Date()).getTime() - startTime));

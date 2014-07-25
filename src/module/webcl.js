@@ -27,12 +27,14 @@
         var platforms , devices , context = null, program = null, queue = null;
 
         var cl;
-        if (typeof(webcl) != "undefined") { 
+        if (typeof(webcl) != "undefined") {
             cl = webcl;
         } else if (typeof(WebCL) != "undefined") {
             cl = new WebCL();
         }
 
+        var scripts = document.getElementsByTagName( 'script' );
+        var clPath = scripts[scripts.length - 1].src.replace('alloyimage.js', 'kernel.cl');
 
         /* API */
         var WebCLCommon = {
@@ -55,7 +57,6 @@
                 if (platforms.length === 0) {
                     throw new Error(NO_PLATFORM_FOUND);
                 }
-
                 for (i = 0; i < platforms.length; i++) {
                     switch (type) {
                     case "CPU":
@@ -65,6 +66,7 @@
 
                     case "GPU":
                         devices = platforms[i].getDevices(cl.DEVICE_TYPE_GPU);
+                        console.log("GPU");
                         break;
 
                     case "ALL":
@@ -72,6 +74,7 @@
                          * default device (devices[0]) */
                         devices = platforms[i].getDevices(cl.DEVICE_TYPE_GPU);
                         devices = platforms[i].getDevices(cl.DEVICE_TYPE_CPU);
+                        console.log("ALL");
                         break;
 
                     default:
@@ -85,7 +88,7 @@
 
                 context = this.createContext();
                 queue = this.createCommandQueue();
-                var src = this.loadKernel("../alloyimage/src/webcl/filter/kernel.cl");
+                var src = this.loadKernel(clPath);
                 program = this.createProgramBuild(src);
                 kernel = program.createKernel("sobel_filter");
             },

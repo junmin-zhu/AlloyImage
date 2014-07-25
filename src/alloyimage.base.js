@@ -67,6 +67,9 @@ try{
         //使用WebCL
         useWebCL: typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
 
+        //选择device作为WebCL后端，如：CPU, GPU, ALL
+        webclDevice: "ALL",
+
         //外部定义的ps效果
         definedPs: {},
 
@@ -96,7 +99,6 @@ try{
 
                 obj[attr] ? addModule(obj[attr]) : addModule(obj[attr] = {});
             }
-            console.log(name);
             addModule(this.lib);
 
         },
@@ -276,18 +278,18 @@ try{
             //默认使用worker进行处理
             this.useWorker = P.useWorker;
 
+            //WebCL
+            this.webcl = P.lib.webcl;
+            if (P.useWebCL){
+                this.webcl.init(P.webclDevice);
+            }
+
             //初始化readyState为ready,readyState表明处理就绪
             this.readyState = 1;
 
             if(this.useWorker){
                 //如果使用worker,则初始化一个dorsyWorker封装实例出来
                 this.dorsyWorker = P.lib.dorsyWorker(this);
-            }
-
-            if(P.useWebCL){
-                //初始化WebCL
-                this.webcl = P.lib.webcl;
-                this.webcl.init("ALL");
             }
 
             //mix P.lib.Tools method to $AI.Tools
@@ -300,7 +302,7 @@ try{
                     })(i);
                 }
             }
-            
+
         }else{
 
             //返回自身构造对象
@@ -320,6 +322,20 @@ try{
 
     window[Ps].setName = function(name){
         P.name = name || "alloyimage.js";
+    };
+
+    //决定是否使用webcl, 以及用什么后端
+    //如果输入为空，则不用webcl
+    //如果是CPU， 则用CPU设备作为后端
+    //如果是GPU， 则用GPU设备作为后端
+    window[Ps].setWebCLDevice = function(device){
+        P.webclDevice = device;
+        P.useWebCL = P.useWeCL && (device? true:false);
+        if(P.useWebCL){
+            //初始化WebCL
+            if (P.webclDevice)
+                this.webcl.init(P.webclDevice);
+        }
     };
 
     //获取配置信息

@@ -9,7 +9,7 @@
 
         var M = {
             process: function(imgData, arg, mode){
-               if (mode == "webcl")
+               if (mode)
                    this.processCL(imgData, arg);
                else
                    this.processJS(imgData, arg);

@@ -12,7 +12,7 @@
 
         var M = {
             process: function(imgData, arg, mode){//调节亮度对比度
-               if (mode == "webcl")
+               if (mode)
                    this.processCL(imgData, arg);
                else
                    this.processJS(imgData, arg);

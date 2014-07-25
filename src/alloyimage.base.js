@@ -64,6 +64,9 @@ try{
         //模块池
         lib: [],
 
+        //使用WebCL
+        useWebCL: typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
+
         //外部定义的ps效果
         definedPs: {},
 
@@ -88,13 +91,12 @@ try{
                 //递归出口
                 if(count == moduleArr.length - 1){
                     obj[attr] = func.call(null, _this);
-                    console.log(attr + ":" + count);
                     return;
                 }
 
                 obj[attr] ? addModule(obj[attr]) : addModule(obj[attr] = {});
             }
-
+            console.log(name);
             addModule(this.lib);
 
         },
@@ -106,6 +108,7 @@ try{
 
             document.body.appendChild(scriptLoader);
             scriptLoader.src = "./js/module/" + name + ".js";
+            console.log(scriptLoader.src);
             scriptLoader.onload = scriptLoader.onerror = function(e){
                 _this.handlerror(e);
             }
@@ -131,16 +134,15 @@ try{
 
             var spaceName = moduleName.spaceName;
             var actName = moduleName.actName;
-            console.log("moduleName " + moduleName + "; spaceName " + spaceName + "; actName " + actName);
             switch(spaceName){
                 case "Filter":
                 case "Alteration":
 
-                    return this.lib[spaceName][actName].process(imgData, args, "webcl");
+                    return this.lib[spaceName][actName].process(imgData, args, this.useWebCL);
                     //break;
 
                 case "ComEffect":
-                    return this.lib[actName].process(imgData, args, "webcl");
+                    return this.lib[actName].process(imgData, args, this.useWebCL);
                     //break;
 
                 default:
@@ -172,9 +174,8 @@ try{
         //args[0]代表处理方法，args[1...]代表参数
         tools: function(imgData, args){
             var actMethod = Array.prototype.shift.call(args);
-
             if(this.lib.Tools[actMethod]){
-                return this.lib.Tools[actMethod].process(imgData, args, "webcl");
+                return this.lib.Tools[actMethod].process(imgData, args, this.useWebCL);
             }else{
                 throw new Error("AI_ERROR: 不存在的工具方法_" + actMethod);
             }
@@ -188,7 +189,6 @@ try{
     //返回外部接口
     window[Ps] = function(img, width, height){
         var _this = this;
-
         if(this instanceof window[Ps]){
             //记录时间 time trace
             this.startTime = + new Date();
@@ -282,6 +282,12 @@ try{
             if(this.useWorker){
                 //如果使用worker,则初始化一个dorsyWorker封装实例出来
                 this.dorsyWorker = P.lib.dorsyWorker(this);
+            }
+
+            if(P.useWebCL){
+                //初始化WebCL
+                this.webcl = P.lib.webcl;
+                this.webcl.init("ALL");
             }
 
             //mix P.lib.Tools method to $AI.Tools

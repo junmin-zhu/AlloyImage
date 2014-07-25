@@ -19,7 +19,7 @@
              * @return {Array}
              */
             process: function(imgData, radius, sigma, mode) {
-                if (mode == "webcl")
+                if (mode)
                     this.processCL(imgData, radius, sigma);
                 else
                     this.processJS(imgData, radius, sigma);

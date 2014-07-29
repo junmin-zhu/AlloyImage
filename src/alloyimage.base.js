@@ -65,7 +65,7 @@ try{
         lib: [],
 
         //使用WebCL
-        useWebCL: false, //typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
+        useWebCL: typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
 
         //选择device作为WebCL后端，如：CPU, GPU, ALL
         webclDevice: "CPU",

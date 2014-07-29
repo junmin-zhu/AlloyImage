@@ -119,7 +119,6 @@
             },
 
             run :  function (kernelName, args) {
-                    try {
                     kernels[kernelName].setArg(0, inputBuffer);
                     kernels[kernelName].setArg(1, outputBuffer);
                     kernels[kernelName].setArg(2, new Int32Array([originImg.width]));
@@ -128,16 +127,10 @@
                         kernels[kernelName].setArg(i + 4, args[i]);
                     queue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     queue.finish();
-                    console.log(kernelName);
                     queue.enqueueReadBuffer(outputBuffer, true, 0, nBytes, result);
                     var testR = new Float32Array(nBytes);
-                    queue.enqueueReadBuffer(inputBuffer, true, 0 , nBytes, testR);
-                    console.log(result[20]);
-                    console.log(testR[20]);
                     inputBuffer = outputBuffer;
-                    } catch(e) {
-                        console.log(e);
-                    }
+                    outputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes);
                     return this;
             },
 

@@ -67,7 +67,7 @@ try{
         //使用WebCL
         useWebCL: typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
 
-        //选择device作为WebCL后端，如：CPU, GPU, ALL
+        //选择device作为WebCL后端，如：CPU, GPU, DEFAULT
         webclDevice: "CPU",
 
         //外部定义的ps效果

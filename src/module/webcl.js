@@ -78,12 +78,11 @@
                         console.log("GPU");
                         break;
 
-                    case "ALL":
+                    case "DEFAULT":
                         /* It is importante keep DEVICE_TYPE_CPU always above to make it
                          * default device (devices[0]) */
-                        devices = platforms[i].getDevices(cl.DEVICE_TYPE_GPU);
-                        devices = platforms[i].getDevices(cl.DEVICE_TYPE_CPU);
-                        console.log("ALL");
+                        devices = platforms[i].getDevices(cl.DEVICE_TYPE_DEFAULT);
+                        console.log("Default");
                         break;
 
                     default:

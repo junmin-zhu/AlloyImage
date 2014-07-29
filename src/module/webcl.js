@@ -16,6 +16,7 @@
 
     window[Ps].module("webcl",function(P){
         var debug = true;
+        var initialized = false;
         var NO_WebCL_FOUND = "Unfortunately your system does not support WebCL";
         var NO_PLATFORM_FOUND = "No WebCL platform found in your system";
         var NO_DEVICE_FOUND = "No WebCL device found in your system";
@@ -24,16 +25,16 @@
                 "before call createWebCLProgram";
 
         /* Global vars */
-        var platforms , devices , context = null, program = null, queue = null;
+        var platforms , devices = [] , context = null, program = null, queue = null;
         /* Global memory objects */
         var inputBuffer = null, outputBuffer = null;
         /* Global kernels as mapped type */
-        var kernels = {"darkCorner": null};
+        //var kernels = {"darkCorner": null};
         /* Global work size */
         var globalThreads = null;
 
         /* result and image info*/
-        var result, originImg, nRGBA, nBytes;
+        var result, originImg, width, height, nRGBA, nBytes;
 
         var cl;
         if (typeof(webcl) != "undefined") {
@@ -45,94 +46,153 @@
         var scripts = document.getElementsByTagName( 'script' );
         var clPath = scripts[scripts.length - 1].src.replace('alloyimage.js', 'kernel.cl');
 
-        /* API */
-        var WebCLCommon = {
+        
+        /**
+         * Load the kernel file and return its content
+         *
+         * @param {String} filePath - Kernel file (*.cl) path
+         * @returns {String} File content
+         */
+        var loadKernel = function (filePath) {
+            var res = null;
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", filePath, false);
+            xhr.send();
+            // HTTP reports success with a 200 status, file protocol reports
+            // success with a 0 status
+            if (xhr.status === 200 || xhr.status === 0) {
+                res = xhr.responseText;
+            }
+            return res;
+        };
+        
+        var CLExecutor = function(){
+            var context, commandQueue, program = null, kernels = {"darkCorner": null};
+            var inputBuffer, outputBuffer,result, globalThreads;
+            var executor = {
+                init : function(device, src) {
+                   context = cl.createContext(device);
+                   commandQueue = context.createCommandQueue(device, null);
+                   program =  context.createProgram(src);
+                   program.build(device, null, null);
+                   for (kernelName in kernels) {
+                       kernels[kernelName] = program.createKernel(kernelName);
+                   }
+                   
+                    return this;
+                },
 
+                initBuffer : function() {
+                    inputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
+                                                                 new Float32Array(originImg.data));
+                    globalThreads = [width, height];
+                    result = new Float32Array(nBytes);
+                    return this;
+                },
+                
+                run : function(kernelName, args) {                    
+                    kernels[kernelName].setArg(0, inputBuffer);
+                    kernels[kernelName].setArg(1, new Int32Array([width]));
+                    kernels[kernelName].setArg(2, new Int32Array([height]));
+                    for (var i = 0; i < args.length; ++i)
+                        kernels[kernelName].setArg(i + 3, args[i]);
+                    commandQueue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
+                    commandQueue.finish();
+                    commandQueue.enqueueReadBuffer(inputBuffer, true, 0 , nBytes, result);
+                    return this;
+                },
+
+                getResult : function() {
+                    inputBuffer.release();
+                    return result;
+                }
+            };
+            return executor;
+        };
+
+        var CLExecutorCPU = null, CLExecutorGPU = null;
+        var Executor = null;
+        
+        var initCL = function() {
             /**
              * Check if WebCL is available and populate
              * platforms and devices. Type can be ALL, CPU or GPU.
              *
              */
+            if (cl === undefined) {
+                throw new Error(NO_WebCL_FOUND);
+            }
+            platforms = cl.getPlatforms();
+
+            devices["cpu"]= platforms[0].getDevices(cl.DEVICE_TYPE_CPU);
+            devices["gpu"] = platforms[0].getDevices(cl.DEVICE_TYPE_GPU);
+            var src = loadKernel(clPath);
+            if (devices["cpu"].length) { 
+                CLExecutorCPU = new CLExecutor().init(devices["cpu"][0], src);
+            }
+            else 
+                CLExecutorCPU = null;
+            if (devices["gpu"].length) {
+                CLExecutorGPU = new CLExecutor().init(devices["gpu"][0], src);
+            }
+            else
+                CLExecutorGPU = null;
+        };
+
+        var updateImgInfo = function(imgData) {
+            /* Create Buffer of WebCL need bytes in size, and cannot get throug
+             * js api but this transfer imgData which from context.getImageData
+             * API call and the format of pixel is RGBA and each element stand for
+             * values of R or G or B or A, so each element is 8 bytes
+             */
+            nRGBA = imgData.width * imgData.height * 4;
+            nBytes = nRGBA * Float32Array.BYTES_PER_ELEMENT;
+            width = imgData.width;
+            height = imgData.height;
+            originImg = imgData;
+        };
+
+        /* API */
+        var WebCLCommon = {
+
             init : function (type, imgData) {
-
-                var i;
-
-                if (cl === undefined) {
-                    throw new Error(NO_WebCL_FOUND);
+                if (!initialized) {
+                    initCL();
+                    initialized = true;
                 }
-
-                platforms = cl.getPlatforms();
-
-                if (platforms.length === 0) {
-                    throw new Error(NO_PLATFORM_FOUND);
-                }
-                for (i = 0; i < platforms.length; i++) {
-                    switch (type) {
+                switch (type) {
                     case "CPU":
-                        devices = platforms[i].getDevices(cl.DEVICE_TYPE_CPU);
-                        console.log("CPU");
+                    case "Defalut":
+                    case "All":
+                        if (CLExecutorCPU != null) 
+                            Executor = CLExecutorCPU;
+                        else 
+                            Executor = null;
                         break;
-
+                    
                     case "GPU":
-                        devices = platforms[i].getDevices(cl.DEVICE_TYPE_GPU);
-                        console.log("GPU");
+                        if (CLExecutorGPU != null)
+                            Executor = CLExecutorGPU;
+                        else
+                            Executor = null;
                         break;
-
-                    case "DEFAULT":
-                        /* It is importante keep DEVICE_TYPE_CPU always above to make it
-                         * default device (devices[0]) */
-                        devices = platforms[i].getDevices(cl.DEVICE_TYPE_DEFAULT);
-                        console.log("Default");
-                        break;
-
-                    default:
-                        throw new Error("Unexpected type " + type + " for devices");
-                    }
                 }
-
-                if (devices.length === 0) {
+                if (Executor == null) {
+                    console.log(type + "do not support CL on the device");
                     throw new Error(NO_DEVICE_FOUND);
                 }
-
-                context = this.createContext();
-                queue = this.createCommandQueue();
-                var src = this.loadKernel(clPath);
-                program = this.createProgramBuild(src);
-                originImg = imgData;
-                
-                for (kernelName in kernels) 
-                    kernels[kernelName] = program.createKernel(kernelName);
-
-                /* Create Buffer of WebCL need bytes in size, and cannot get throug
-                 * js api but this transfer imgData which from context.getImageData
-                 * API call and the format of pixel is RGBA and each element stand for
-                 * values of R or G or B or A, so each element is 8 bytes
-                 */
-                nRGBA = imgData.width * imgData.height * 4;
-                nBytes = nRGBA * Float32Array.BYTES_PER_ELEMENT;
-                inputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
-                                                   new Float32Array(imgData.data));
-                result = new Float32Array(nRGBA);
-                globalThreads = [imgData.width, imgData.height];
+                updateImgInfo(imgData);
+                Executor.initBuffer();
+                    
             },
 
             run :  function (kernelName, args) {
-                    kernels[kernelName].setArg(0, inputBuffer);
-                    kernels[kernelName].setArg(1, new Int32Array([originImg.width]));
-                    kernels[kernelName].setArg(2, new Int32Array([originImg.height]));
-                    for(var i = 0; i < args.length; ++i) 
-                        kernels[kernelName].setArg(i + 3, args[i]);
-                    queue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
-                    queue.finish();
-                    queue.enqueueReadBuffer(inputBuffer, true, 0, nBytes, result);
-                    var testR = new Float32Array(nBytes);
-                    return this;
+                Executor.run(kernelName,args);    
+                return this;
             },
 
             getResult : function () {
-                   /* for no cache implmentation, release all */
-                   cl.releaseAll();
-                   return result;
+                return Executor.getResult();
             },
 
             /**

@@ -65,10 +65,10 @@ try{
         lib: [],
 
         //使用WebCL
-        useWebCL: typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
+        useWebCL: false, //typeof(webcl) != "undefined" || typeof(WebCL) != "undefined",
 
         //选择device作为WebCL后端，如：CPU, GPU, ALL
-        webclDevice: "ALL",
+        webclDevice: "CPU",
 
         //外部定义的ps效果
         definedPs: {},
@@ -281,7 +281,7 @@ try{
             //WebCL
             this.webcl = P.lib.webcl;
             if (P.useWebCL){
-                this.webcl.init(P.webclDevice);
+                this.webcl.init(P.webclDevice, this.imgData);
             }
 
             //初始化readyState为ready,readyState表明处理就绪
@@ -334,7 +334,7 @@ try{
         if(P.useWebCL){
             //初始化WebCL
             if (P.webclDevice)
-                this.webcl.init(P.webclDevice);
+                this.webcl.init(P.webclDevice,this.imgData);
         }
     };
 

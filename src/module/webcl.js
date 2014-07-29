@@ -15,7 +15,7 @@
 ;(function(Ps){
 
     window[Ps].module("webcl",function(P){
-
+        var debug = true;
         var NO_WebCL_FOUND = "Unfortunately your system does not support WebCL";
         var NO_PLATFORM_FOUND = "No WebCL platform found in your system";
         var NO_DEVICE_FOUND = "No WebCL device found in your system";
@@ -25,6 +25,15 @@
 
         /* Global vars */
         var platforms , devices , context = null, program = null, queue = null;
+        /* Global memory objects */
+        var inputBuffer = null, outputBuffer = null;
+        /* Global kernels as mapped type */
+        var kernels = {"darkCorner": null};
+        /* Global work size */
+        var globalThreads = null;
+
+        /* result and image info*/
+        var result, originImg, nRGBA, nBytes;
 
         var cl;
         if (typeof(webcl) != "undefined") {
@@ -44,7 +53,7 @@
              * platforms and devices. Type can be ALL, CPU or GPU.
              *
              */
-            init : function (type) {
+            init : function (type, imgData) {
 
                 var i;
 
@@ -90,7 +99,52 @@
                 queue = this.createCommandQueue();
                 var src = this.loadKernel(clPath);
                 program = this.createProgramBuild(src);
-                kernel = program.createKernel("sobel_filter");
+                originImg = imgData;
+                
+                for (kernelName in kernels) 
+                    kernels[kernelName] = program.createKernel(kernelName);
+
+                /* Create Buffer of WebCL need bytes in size, and cannot get throug
+                 * js api but this transfer imgData which from context.getImageData
+                 * API call and the format of pixel is RGBA and each element stand for
+                 * values of R or G or B or A, so each element is 8 bytes
+                 */
+                nRGBA = imgData.width * imgData.height * 4;
+                nBytes = nRGBA * Float32Array.BYTES_PER_ELEMENT;
+                inputBuffer = context.createBuffer(cl.MEM_READ_ONLY, nBytes,
+                                                   new Float32Array(imgData.data));
+                outputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes);
+                result = new Float32Array(nRGBA);
+                globalThreads = [imgData.width, imgData.height];
+            },
+
+            run :  function (kernelName, args) {
+                    try {
+                    kernels[kernelName].setArg(0, inputBuffer);
+                    kernels[kernelName].setArg(1, outputBuffer);
+                    kernels[kernelName].setArg(2, new Int32Array([originImg.width]));
+                    kernels[kernelName].setArg(3, new Int32Array([originImg.height]));
+                    for(var i = 0; i < args.length; ++i) 
+                        kernels[kernelName].setArg(i + 4, args[i]);
+                    queue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
+                    queue.finish();
+                    console.log(kernelName);
+                    queue.enqueueReadBuffer(outputBuffer, true, 0, nBytes, result);
+                    var testR = new Float32Array(nBytes);
+                    queue.enqueueReadBuffer(inputBuffer, true, 0 , nBytes, testR);
+                    console.log(result[20]);
+                    console.log(testR[20]);
+                    inputBuffer = outputBuffer;
+                    } catch(e) {
+                        console.log(e);
+                    }
+                    return this;
+            },
+
+            getResult : function () {
+                   /* for no cache implmentation, release all */
+                   cl.releaseAll();
+                   return result;
             },
 
             /**
@@ -188,15 +242,33 @@
 
                 try {
                     program  = this.createProgram(src);
+                    console.log(program);
                     program.build(devices, null, null);
+                  
                 } catch (e) {
                     if (debug) {
-                        console.error(e);
+                    console.error(e);
                     }
                     throw e;
                 }
 
                 return program;
+            },
+
+            getInputBuffer : function () {
+                return inputBuffer;
+            },
+
+            getOutputBuffer : function () {
+                return outputBuffer;
+            },
+
+            getKernel : function (kernelName) {
+                return kernels[kernelName];
+            },
+
+            getCommandQueue : function() {
+                return queue;
             },
 
             /**

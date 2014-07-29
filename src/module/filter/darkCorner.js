@@ -78,6 +78,16 @@
 
             processCL: function(imgData, arg){
                 var startTime = (new Date()).getTime(); 
+                
+                var R = parseInt(arg[0]) || 3;
+                var lastLevel = arg[1] || 30;   
+                
+                var result =  P.lib.webcl.run("darkCorner", 
+                                              [new Int32Array([R]), 
+                                               new Int32Array([lastLevel])]).getResult();
+                for (var i = 0; i < result.length; ++i)
+                    imgData.data[i] = result[i];
+                
                 console.log("darkcornerCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }

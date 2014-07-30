@@ -100,7 +100,17 @@ try{
                 obj[attr] ? addModule(obj[attr]) : addModule(obj[attr] = {});
             }
             addModule(this.lib);
+            if (name == "webcl")
+                this.initWebCL(this.webclDevice);
+        },
 
+        //初始化WebCL
+        initWebCL: function(deviceType) {
+            if (document.addEventListener){
+                document.addEventListener('load', this.lib.webcl.init(deviceType));
+            } else {
+                document.attachEvent('onload', this.lib.webcl.init(deviceType));
+            }
         },
 
         //加载文件
@@ -110,7 +120,6 @@ try{
 
             document.body.appendChild(scriptLoader);
             scriptLoader.src = "./js/module/" + name + ".js";
-            console.log(scriptLoader.src);
             scriptLoader.onload = scriptLoader.onerror = function(e){
                 _this.handlerror(e);
             }
@@ -278,10 +287,10 @@ try{
             //默认使用worker进行处理
             this.useWorker = P.useWorker;
 
-            //WebCL
+            //加载图片到WebCL
             this.webcl = P.lib.webcl;
             if (P.useWebCL){
-                this.webcl.init(P.webclDevice, this.imgData);
+                this.webcl.loadData(this.imgData);
             }
 
             //初始化readyState为ready,readyState表明处理就绪
@@ -331,11 +340,6 @@ try{
     window[Ps].setWebCLDevice = function(device){
         P.webclDevice = device;
         P.useWebCL = P.useWeCL && (device? true:false);
-        if(P.useWebCL){
-            //初始化WebCL
-            if (P.webclDevice)
-                this.webcl.init(P.webclDevice,this.imgData);
-        }
     };
 
     //获取配置信息
@@ -1041,7 +1045,6 @@ try{
             this.dorsyWorker.startWorker();
         }
     }
-
 })("psLib");
 
 window.AlloyImage = window.$AI = window.psLib;

@@ -46,7 +46,6 @@
         var scripts = document.getElementsByTagName( 'script' );
         var clPath = scripts[scripts.length - 1].src.replace('alloyimage.js', 'kernel.cl');
 
-        
         /**
          * Load the kernel file and return its content
          *
@@ -65,7 +64,7 @@
             }
             return res;
         };
-        
+
         var CLExecutor = function(){
             var context, commandQueue, program = null, kernels = {"darkCorner": null};
             var inputBuffer, outputBuffer,result, globalThreads;
@@ -78,7 +77,7 @@
                    for (kernelName in kernels) {
                        kernels[kernelName] = program.createKernel(kernelName);
                    }
-                   
+
                     return this;
                 },
 
@@ -89,8 +88,8 @@
                     result = new Float32Array(nBytes);
                     return this;
                 },
-                
-                run : function(kernelName, args) {                    
+
+                run : function(kernelName, args) {
                     kernels[kernelName].setArg(0, inputBuffer);
                     kernels[kernelName].setArg(1, new Int32Array([width]));
                     kernels[kernelName].setArg(2, new Int32Array([height]));
@@ -112,11 +111,11 @@
 
         var CLExecutorCPU = null, CLExecutorGPU = null;
         var Executor = null;
-        
+
         var initCL = function() {
             /**
              * Check if WebCL is available and populate
-             * platforms and devices. Type can be ALL, CPU or GPU.
+             * platforms and devices. Type can be Default, CPU or GPU.
              *
              */
             if (cl === undefined) {
@@ -127,10 +126,9 @@
             devices["cpu"]= platforms[0].getDevices(cl.DEVICE_TYPE_CPU);
             devices["gpu"] = platforms[0].getDevices(cl.DEVICE_TYPE_GPU);
             var src = loadKernel(clPath);
-            if (devices["cpu"].length) { 
+            if (devices["cpu"].length) {
                 CLExecutorCPU = new CLExecutor().init(devices["cpu"][0], src);
-            }
-            else 
+            } else
                 CLExecutorCPU = null;
             if (devices["gpu"].length) {
                 CLExecutorGPU = new CLExecutor().init(devices["gpu"][0], src);
@@ -155,7 +153,7 @@
         /* API */
         var WebCLCommon = {
 
-            init : function (type, imgData) {
+            init : function (type) {
                 if (!initialized) {
                     initCL();
                     initialized = true;
@@ -164,12 +162,11 @@
                     case "CPU":
                     case "Defalut":
                     case "All":
-                        if (CLExecutorCPU != null) 
+                        if (CLExecutorCPU != null)
                             Executor = CLExecutorCPU;
-                        else 
+                        else
                             Executor = null;
                         break;
-                    
                     case "GPU":
                         if (CLExecutorGPU != null)
                             Executor = CLExecutorGPU;
@@ -181,13 +178,15 @@
                     console.log(type + "do not support CL on the device");
                     throw new Error(NO_DEVICE_FOUND);
                 }
+            },
+
+            loadData : function (imgData) {
                 updateImgInfo(imgData);
                 Executor.initBuffer();
-                    
             },
 
             run :  function (kernelName, args) {
-                Executor.run(kernelName,args);    
+                Executor.run(kernelName,args);
                 return this;
             },
 

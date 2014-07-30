@@ -39,6 +39,7 @@
                 var maxDistance = P.lib.dorsyMath.distance([middleX ,middleY]);
                 //开始产生暗角的距离
                 var startDistance = maxDistance * (1 - R / 10);
+                R = 9;
 
                 var f = function(x, p0, p1, p2, p3){
 
@@ -85,8 +86,10 @@
                 var result =  P.lib.webcl.run("darkCorner", 
                                               [new Int32Array([R]), 
                                                new Int32Array([lastLevel])]).getResult();
-                for (var i = 0; i < result.length; ++i)
+                for (var i = 0; i < result.length; ++i){
                     imgData.data[i] = result[i];
+                }
+
                 
                 console.log("darkcornerCL: " + ((new Date()).getTime() - startTime));
                 return imgData;

@@ -110,26 +110,22 @@
                  */
                 nRGBA = imgData.width * imgData.height * 4;
                 nBytes = nRGBA * Float32Array.BYTES_PER_ELEMENT;
-                inputBuffer = context.createBuffer(cl.MEM_READ_ONLY, nBytes,
+                inputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
                                                    new Float32Array(imgData.data));
-                outputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes);
                 result = new Float32Array(nRGBA);
                 globalThreads = [imgData.width, imgData.height];
             },
 
             run :  function (kernelName, args) {
                     kernels[kernelName].setArg(0, inputBuffer);
-                    kernels[kernelName].setArg(1, outputBuffer);
-                    kernels[kernelName].setArg(2, new Int32Array([originImg.width]));
-                    kernels[kernelName].setArg(3, new Int32Array([originImg.height]));
+                    kernels[kernelName].setArg(1, new Int32Array([originImg.width]));
+                    kernels[kernelName].setArg(2, new Int32Array([originImg.height]));
                     for(var i = 0; i < args.length; ++i) 
-                        kernels[kernelName].setArg(i + 4, args[i]);
+                        kernels[kernelName].setArg(i + 3, args[i]);
                     queue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     queue.finish();
-                    queue.enqueueReadBuffer(outputBuffer, true, 0, nBytes, result);
+                    queue.enqueueReadBuffer(inputBuffer, true, 0, nBytes, result);
                     var testR = new Float32Array(nBytes);
-                    inputBuffer = outputBuffer;
-                    outputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes);
                     return this;
             },
 
@@ -234,11 +230,12 @@
 
                 try {
                     program  = this.createProgram(src);
-                    console.log(program);
                     program.build(devices, null, null);
                   
                 } catch (e) {
                     if (debug) {
+                    var text = program.getBuildInfo(devices[0], cl.PROGRAM_BUILD_LOG);
+                    console.log(text);
                     console.error(e);
                     }
                     throw e;

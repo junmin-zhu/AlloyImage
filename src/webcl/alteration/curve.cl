@@ -1,4 +1,4 @@
-float getLk(float x, int k, float* xArr, int num)
+float getLk(float x, int k, __global float* xArr, int num)
 {
     float omigaXk = 1;
     float omigaX = 1;
@@ -12,7 +12,7 @@ float getLk(float x, int k, float* xArr, int num)
     return lk;
 }
 
-float lagrange(float* xArr, float* yArr, float x, int num)
+float lagrange(__global float* xArr, __global float* yArr, float x, int num)
 {
     float L = 0;
     for (int k = 0; k < num; k++) {
@@ -24,12 +24,12 @@ float lagrange(float* xArr, float* yArr, float x, int num)
 
 
 __kernel void curve (
-     __global float* input,
+    __global  float* input,
     const     int    width,
     const     int    height,
-              float* arg0,
-              float* arg1,
-              int*   indexOfArr,
+    __global  float* arg0,
+    __global  float* arg1,
+    __global  int*   indexOfArr,
     const     int    num)
 {
     int ix = get_global_id(0);

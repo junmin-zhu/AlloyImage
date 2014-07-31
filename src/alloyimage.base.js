@@ -106,6 +106,7 @@ try{
 
         //初始化WebCL
         initWebCL: function(deviceType) {
+            console.log(deviceType);
             if (document.addEventListener){
                 document.addEventListener('load', this.lib.webcl.init(deviceType));
             } else {
@@ -337,9 +338,15 @@ try{
     //如果输入为空，则不用webcl
     //如果是CPU， 则用CPU设备作为后端
     //如果是GPU， 则用GPU设备作为后端
+    //返回设置是否生效。
     window[Ps].setWebCLDevice = function(device){
-        P.webclDevice = device;
-        P.useWebCL = P.useWeCL && (device? true:false);
+        if (device == "") {
+            P.useWebCL = false;
+        } else {
+            P.webclDevice = device;
+            P.useWebCL = typeof(webcl) != "undefined" || typeof(WebCL) != "undefined";
+        }
+        return P.useWebCL;
     };
 
     //获取配置信息

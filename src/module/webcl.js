@@ -66,10 +66,14 @@
         };
 
         var CLExecutor = function(){
-            var context, commandQueue, program = null, kernels = {"darkCorner": null};
+            var context, commandQueue, program = null, 
+                kernels = {"darkCorner": null,
+                           "curve": null};
             var inputBuffer, outputBuffer,result, globalThreads;
+            var buffers = [];
             var executor = {
                 init : function(device, src) {
+                  // try {
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
                    program =  context.createProgram(src);
@@ -77,7 +81,11 @@
                    for (kernelName in kernels) {
                        kernels[kernelName] = program.createKernel(kernelName);
                    }
-
+                   //} catch(e) {
+                    //   console.log(e);
+                    //   var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
+                    //   console.log(text);
+                  // }
                     return this;
                 },
 
@@ -90,19 +98,47 @@
                 },
 
                 run : function(kernelName, args) {
+                    //try{
                     kernels[kernelName].setArg(0, inputBuffer);
                     kernels[kernelName].setArg(1, new Int32Array([width]));
                     kernels[kernelName].setArg(2, new Int32Array([height]));
-                    for (var i = 0; i < args.length; ++i)
+                    for (var i = 0; i < args.length; ++i){
                         kernels[kernelName].setArg(i + 3, args[i]);
+                    }
                     commandQueue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     commandQueue.finish();
                     commandQueue.enqueueReadBuffer(inputBuffer, true, 0 , nBytes, result);
+                    //} catch(e) {
+                      //  console.log(e);
+                        
+                    //console.log(args.length);
+                    //}
                     return this;
+                },
+
+                convertArrayToBuffer: function(arr, type) {
+                    switch(type) {
+                        case "float":
+                            var bytes = Float32Array.BYTES_PER_ELEMENT * arr.length;
+                            buffers[buffers.length] = 
+                                context.createBuffer(cl.MEM_READ_WRITE, bytes,
+                                                     new Float32Array(arr));
+                            break;
+                        case "int":
+                            var bytes = Int32Array.BYTES_PER_ELEMENT * arr.length;
+                            buffers[buffers.length] =
+                                context.createBuffer(cl.MEM_READ_WRITE, bytes,
+                                                     new Int32Array(arr));
+                            break;
+                    }
+                    return buffers[buffers.length -1];
                 },
 
                 getResult : function() {
                     inputBuffer.release();
+                    for (var i = 0; i < buffers.length; i ++)
+                        buffers[i].release();
+                    buffers = [];
                     return result;
                 }
             };
@@ -192,6 +228,10 @@
 
             getResult : function () {
                 return Executor.getResult();
+            },
+
+            convertArrayToBuffer: function(arr, type) {
+                return Executor.convertArrayToBuffer(arr, type);
             },
 
             /**

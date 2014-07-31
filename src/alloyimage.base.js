@@ -100,7 +100,7 @@ try{
                 obj[attr] ? addModule(obj[attr]) : addModule(obj[attr] = {});
             }
             addModule(this.lib);
-            if (name == "webcl")
+            if (name == "webcl" && this.useWebCL)
                 this.initWebCL(this.webclDevice);
         },
 

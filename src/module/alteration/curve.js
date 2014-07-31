@@ -33,12 +33,12 @@
                 }
                 
                 var channelString = channel.replace("R","0").replace("G","1").replace("B","2");
-                
                 var indexOfArr = [
                     channelString.indexOf("0") > -1,
                     channelString.indexOf("1") > -1,
                     channelString.indexOf("2") > -1
                 ];
+                console.log(indexOfArr[0]);
 
                 //区块
                 for(var x = 0; x < width; x ++){
@@ -64,6 +64,28 @@
                  * arg   arg[0] = [3,3] ,arg[1]  = [2,2]
                  * */
                 var startTime = (new Date()).getTime();
+                //调节通道
+                var channel = arg[2];
+                if(!(/[RGB]+/.test(channel))){
+                    channel = "RGB";
+                }
+                
+                var channelString = channel.replace("R","0").replace("G","1").replace("B","2");
+                
+                var indexOfArr = [];
+                    channelString.indexOf("0") > -1 ? indexOfArr[0] = 1 : indexOfArr[0] = 0;
+                    channelString.indexOf("1") > -1 ? indexOfArr[1] = 1 : indexOfArr[1] = 0;
+                    channelString.indexOf("2") > -1 ? indexOfArr[2] = 1 : indexOfArr[2] = 0;
+                var result = P.lib.webcl.run("curve",
+                                             [P.lib.webcl.convertArrayToBuffer(arg[0], "float"),
+                                              P.lib.webcl.convertArrayToBuffer(arg[1], "float"),
+                                              P.lib.webcl.convertArrayToBuffer(indexOfArr, "int"),
+                                              new Int32Array([arg[0].length])
+                                             ])
+                                        .getResult();
+                for (var i = 0; i < result.length; ++i){
+                    imgData.data[i] = result[i];
+                }
                 console.log("curveCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }

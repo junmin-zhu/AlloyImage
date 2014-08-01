@@ -27,7 +27,7 @@
         /* Global vars */
         var platforms , devices = [] , context = null, program = null, queue = null;
         /* Global memory objects */
-        var inputBuffer = null, outputBuffer = null;
+        /*var inputBuffer = null, outputBuffer = null;*/
         /* Global kernels as mapped type */
         //var kernels = {"darkCorner": null};
         /* Global work size */
@@ -70,7 +70,7 @@
                 kernels = {"darkCorner": null,
                            "curve": null,
                            "embossment": null};
-            var inputBuffer, outputBuffer,result, globalThreads;
+            var ioBuffer, result, globalThreads;
             var buffers = [];
             var executor = {
                 init : function(device, src) {
@@ -91,7 +91,7 @@
                 },
 
                 initBuffer : function() {
-                    inputBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
+                    ioBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
                                                                  new Float32Array(originImg.data));
                     globalThreads = [width, height];
                     result = new Float32Array(nBytes);
@@ -100,7 +100,7 @@
 
                 run : function(kernelName, args) {
                     //try{
-                    kernels[kernelName].setArg(0, inputBuffer);
+                    kernels[kernelName].setArg(0, ioBuffer);
                     kernels[kernelName].setArg(1, new Int32Array([width]));
                     kernels[kernelName].setArg(2, new Int32Array([height]));
                     for (var i = 0; i < args.length; ++i){
@@ -108,7 +108,7 @@
                     }
                     commandQueue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     commandQueue.finish();
-                    commandQueue.enqueueReadBuffer(inputBuffer, true, 0 , nBytes, result);
+                    commandQueue.enqueueReadBuffer(ioBuffer, true, 0 , nBytes, result);
                     //} catch(e) {
                     //    console.log(e);
                         
@@ -136,7 +136,7 @@
                 },
 
                 getResult : function() {
-                    inputBuffer.release();
+                    ioBuffer.release();
                     for (var i = 0; i < buffers.length; i ++)
                         buffers[i].release();
                     buffers = [];
@@ -343,7 +343,7 @@
 
                 return program;
             },
-
+            /*
             getInputBuffer : function () {
                 return inputBuffer;
             },
@@ -351,7 +351,7 @@
             getOutputBuffer : function () {
                 return outputBuffer;
             },
-
+            */
             getKernel : function (kernelName) {
                 return kernels[kernelName];
             },

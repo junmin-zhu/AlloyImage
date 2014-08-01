@@ -1,13 +1,7 @@
-float f(float x, float p0, float p1, float p2, float p3) {
+/*float f(float x, float p0, float p1, float p2, float p3) {
    return p0 * pow((1 - x), 3) + 3 * p1 * x * pow((1 - x), 2) + 3 * p2 * x * x * (1 - x) + p3 * pow(x, 3);
-}
+}*/
 
-float calDark(int x, int y, float middlex, float middley, int p, int lastlevel, float startdistance, float maxdistance) {
-   float distance = hypot(x - middlex, y - middley);
-   float currbilv= (distance - startdistance) / (maxdistance - startdistance);
-   if (currbilv < 0) currbilv = 0;
-   return f(currbilv, 0, 0.02, 0.3, 1) * p * lastlevel / 255; 
-}
 
 __kernel void darkCorner(
             __global float* input,
@@ -16,20 +10,27 @@ __kernel void darkCorner(
             const    int     r,
             const    int     lastlevel)
 {
-    int ix = get_global_id(0);
-    int iy = get_global_id(1);
-    
-    float xlength = r * 2 + 1;
-    
-    float middlex = width * 2 / 3.0;
-    float middley = height * 1 / 2.0;
+    uint ix = get_global_id(0);
+    uint iy = get_global_id(1);
+    uint reali = iy * width + ix;
+    float4 temp = (float4)(input[reali * 4], input[reali * 4 + 1], input[reali * 4 + 2], input[reali * 4 + 3]); 
+    float2 middlePoint = (float2)(width * 2 / 3.0, height / 2.0);
+    float2 currPoint = (float2)(ix, iy);
 
-    float maxdistance = hypot(middlex, middley);
+    float maxdistance = length(middlePoint);
     float startdistance = maxdistance * (1 - r / 10.0);
+    float dis = distance(currPoint, middlePoint);
 
-    int reali = iy * width + ix;
-    for (int j = 0; j < 3; j ++) {
-         float ddarkness = calDark(ix, iy, middlex, middley, input[reali * 4 + j], lastlevel, startdistance, maxdistance);
-         input[reali * 4 + j] -= ddarkness;
-    }
+    float currbilv = (dis - startdistance) / (maxdistance - startdistance);
+    if (currbilv < 0) return;
+
+    /* according to js version f(currBilv, 0 , 0.02, 0.3, 1)*/
+    float bilv = 3 * 0.02 * currbilv * native_powr((1 - currbilv), 2) 
+                 + 3 * 0.3 * currbilv * currbilv * (1 - currbilv) 
+                 + native_powr(currbilv, 3)
+    ;
+    temp -= bilv * lastlevel * temp / 255;
+    input[reali * 4] = temp.x;
+    input[reali * 4 + 1] = temp.y;
+    input[reali * 4 + 2] = temp.z;
 }

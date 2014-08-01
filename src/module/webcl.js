@@ -68,12 +68,13 @@
         var CLExecutor = function(){
             var context, commandQueue, program = null, 
                 kernels = {"darkCorner": null,
-                           "curve": null};
+                           "curve": null,
+                           "embossment": null};
             var inputBuffer, outputBuffer,result, globalThreads;
             var buffers = [];
             var executor = {
                 init : function(device, src) {
-                  // try {
+                   //try {
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
                    program =  context.createProgram(src);
@@ -85,7 +86,7 @@
                     //   console.log(e);
                     //   var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
                     //   console.log(text);
-                  // }
+                   //}
                     return this;
                 },
 
@@ -109,9 +110,9 @@
                     commandQueue.finish();
                     commandQueue.enqueueReadBuffer(inputBuffer, true, 0 , nBytes, result);
                     //} catch(e) {
-                      //  console.log(e);
+                    //    console.log(e);
                         
-                    //console.log(args.length);
+                    //    console.log(args.length);
                     //}
                     return this;
                 },
@@ -196,8 +197,8 @@
                 }
                 switch (type) {
                     case "CPU":
-                    case "Defalut":
-                    case "All":
+                    case "DEFAULT":
+                    case "ALL":
                         if (CLExecutorCPU != null)
                             Executor = CLExecutorCPU;
                         else

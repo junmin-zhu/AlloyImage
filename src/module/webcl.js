@@ -69,12 +69,13 @@
             var context, commandQueue, program = null, 
                 kernels = {"darkCorner": null,
                            "curve": null,
-                           "embossment": null};
+                           "embossment": null,
+                           "setHSI" : null};
             var ioBuffer, result, globalThreads;
             var buffers = [];
             var executor = {
                 init : function(device, src) {
-                   //try {
+                  // try {
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
                    program =  context.createProgram(src);
@@ -82,11 +83,11 @@
                    for (kernelName in kernels) {
                        kernels[kernelName] = program.createKernel(kernelName);
                    }
-                   //} catch(e) {
-                    //   console.log(e);
-                    //   var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
-                    //   console.log(text);
-                   //}
+                  // } catch(e) {
+                  //     console.log(e);
+                  //     var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
+                  //     console.log(text);
+                  // }
                     return this;
                 },
 

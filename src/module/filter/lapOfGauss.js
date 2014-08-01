@@ -38,6 +38,16 @@
 
             processCL: function(imgData,arg){
                 var startTime = (new Date()).getTime();
+                var low = 250;
+
+                var result =  P.lib.webcl.run("borderline",
+                                              [P.lib.webcl.convertArrayToBuffer(imgData.data, "float")])
+                                         .getResult();
+                for (var i = 0; i < result.length; ++i){
+                    if (result[i]){
+                        imgData.data[i] = result[i] < low ? result[i] : imgData.data[i];
+                    }
+                }
                 console.log("borderlineCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }

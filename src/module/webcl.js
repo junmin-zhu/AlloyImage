@@ -67,7 +67,8 @@
 
         var CLExecutor = function(){
             var context, commandQueue, program = null, 
-                kernels = {"darkCorner": null,
+                kernels = {"borderline": null,
+                           "darkCorner": null,
                            "curve": null,
                            "embossment": null,
                            "setHSI" : null};
@@ -100,7 +101,7 @@
                 },
 
                 run : function(kernelName, args) {
-                    //try{
+                    try{
                     kernels[kernelName].setArg(0, ioBuffer);
                     kernels[kernelName].setArg(1, new Int32Array([width]));
                     kernels[kernelName].setArg(2, new Int32Array([height]));
@@ -110,11 +111,11 @@
                     commandQueue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     commandQueue.finish();
                     commandQueue.enqueueReadBuffer(ioBuffer, true, 0 , nBytes, result);
-                    //} catch(e) {
-                    //    console.log(e);
+                    } catch(e) {
+                        console.log(e);
                         
-                    //    console.log(args.length);
-                    //}
+                        console.log(args.length);
+                    }
                     return this;
                 },
 

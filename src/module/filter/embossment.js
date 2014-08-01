@@ -47,6 +47,11 @@
 
             processCL: function(imgData, arg){//（WebCL版本）
                 var startTime = (new Date()).getTime();
+                var result = P.lib.webcl.run("embossment",
+                                             [P.lib.webcl.convertArrayToBuffer(imgData.data, "float")])
+                                        .getResult();
+                for (var i = 0; i < result.length; ++i)
+                    imgData.data[i] = result[i];
 
                 console.log("embossmentCL: " + ((new Date()).getTime() - startTime));
                 return imgData;

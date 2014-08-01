@@ -137,10 +137,10 @@
                 },
 
                 getResult : function() {
-                    ioBuffer.release();
-                    for (var i = 0; i < buffers.length; i ++)
-                        buffers[i].release();
-                    buffers = [];
+                    //ioBuffer.release();
+                    //for (var i = 0; i < buffers.length; i ++)
+                    //    buffers[i].release();
+                    //buffers = [];
                     return result;
                 }
             };

@@ -71,12 +71,13 @@
                            "darkCorner": null,
                            "curve": null,
                            "embossment": null,
-                           "setHSI" : null};
+                           "setHSI" : null,
+                           "gaussBlur" : null};
             var ioBuffer, result, globalThreads;
             var buffers = [];
             var executor = {
                 init : function(device, src) {
-                  // try {
+                   //try {
                    cl.releaseAll();
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
@@ -85,11 +86,11 @@
                    for (kernelName in kernels) {
                        kernels[kernelName] = program.createKernel(kernelName);
                    }
-                  // } catch(e) {
-                  //     console.log(e);
-                  //     var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
-                  //     console.log(text);
-                  // }
+                   //} catch(e) {
+                   //    console.log(e);
+                   //    var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
+                   //    console.log(text);
+                   //}
                     return this;
                 },
 

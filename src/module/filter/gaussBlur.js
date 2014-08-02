@@ -19,7 +19,7 @@
              * @return {Array}
              */
             process: function(imgData, radius, sigma, mode) {
-                if (mode)
+                if (mode)//(mode)
                     this.processCL(imgData, radius, sigma);
                 else
                     this.processJS(imgData, radius, sigma);
@@ -112,7 +112,32 @@
 
             processCL: function(imgData,radius, sigma) {
                 var startTime = (new Date()).getTime();
-
+                var gaussMatrix = [];
+                var gaussSum = 0;
+                radius = Math.floor(radius) || 3;
+                sigma = sigma || radius / 3;
+                
+                a = 1 / (Math.sqrt(2 * Math.PI) * sigma);
+                b = -1 / (2 * sigma * sigma);
+                //生成高斯矩阵
+                for (i = 0, x = -radius; x <= radius; x++, i++){
+                    g = a * Math.exp(b * x * x);
+                    gaussMatrix[i] = g;
+                    gaussSum += g;
+                
+                }
+                //归一化, 保证高斯矩阵的值在[0,1]之间
+                for (i = 0, len = gaussMatrix.length; i < len; i++) {
+                    gaussMatrix[i] /= gaussSum;
+                }
+               var result =  P.lib.webcl.run("gaussBlur",
+                                            [new Int32Array([radius]),
+                                             new Float32Array([sigma]),
+                                             P.lib.webcl.convertArrayToBuffer(gaussMatrix, "float"),
+                                             P.lib.webcl.convertArrayToBuffer(imgData.data, "float")
+                                            ]).getResult();
+               for (var i = 0; i < result.length; ++i)
+                   imgData.data[i] = result[i];
                 console.log("gaussBlurCL: " + ((new Date()).getTime() - startTime));
                 return imgData;
             }

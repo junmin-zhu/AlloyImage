@@ -290,7 +290,18 @@ try{
 
             //加载图片到WebCL
             this.webcl = P.lib.webcl;
-            if (P.useWebCL){
+
+            /* 
+             * There are two strategies to create ps object,
+             * one is sychronous: 
+             * transfer imgData, width, height at once,
+             * and the other is asynchronous:
+             * just transfer width, height,
+             * and set imgData using context.putImageData.
+             * asynchronous always set imgData as a whilte rect and then fill it
+             * this is the reason effect failed before
+             */
+            if (P.useWebCL && arguments.length > 2){
                 this.webcl.loadData(this.imgData);
             }
 
@@ -344,7 +355,8 @@ try{
             P.useWebCL = false;
         } else {
             P.webclDevice = device;
-            P.useWebCL = typeof(webcl) != "undefined" || typeof(WebCL) != "undefined";
+            P.useWebCL = P.lib.webcl.init(device) &&
+                        (typeof(webcl) != "undefined" || typeof(WebCL) != "undefined");
         }
         return P.useWebCL;
     };
@@ -645,10 +657,12 @@ try{
                 }
             }
             */
-
             var tempPsLib = new window[Ps](this.canvas.width, this.canvas.height);
             tempPsLib.context.putImageData(this.imgData, 0, 0);
             tempPsLib.imgData = tempPsLib.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            if (P.useWebCL) { // clone function always stands for ps effect start, need load Image
+                tempPsLib.webcl.loadData(tempPsLib.imgData);
+            }
             /*
             tempPsLib.add(this);
             */

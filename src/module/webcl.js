@@ -77,6 +77,7 @@
             var executor = {
                 init : function(device, src) {
                   // try {
+                   cl.releaseAll();
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
                    program =  context.createProgram(src);
@@ -93,6 +94,8 @@
                 },
 
                 initBuffer : function() {
+                    if (ioBuffer != null)
+                        ioBuffer.release();
                     ioBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
                                                                  new Float32Array(originImg.data));
                     globalThreads = [width, height];
@@ -101,7 +104,6 @@
                 },
 
                 run : function(kernelName, args) {
-                    try{
                     kernels[kernelName].setArg(0, ioBuffer);
                     kernels[kernelName].setArg(1, new Int32Array([width]));
                     kernels[kernelName].setArg(2, new Int32Array([height]));
@@ -111,11 +113,6 @@
                     commandQueue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     commandQueue.finish();
                     commandQueue.enqueueReadBuffer(ioBuffer, true, 0 , nBytes, result);
-                    } catch(e) {
-                        console.log(e);
-                        
-                        console.log(args.length);
-                    }
                     return this;
                 },
 
@@ -139,9 +136,9 @@
 
                 getResult : function() {
                     //ioBuffer.release();
-                    //for (var i = 0; i < buffers.length; i ++)
-                    //    buffers[i].release();
-                    //buffers = [];
+                    for (var i = 0; i < buffers.length; i ++)
+                        buffers[i].release();
+                    buffers = [];
                     return result;
                 }
             };
@@ -201,22 +198,24 @@
                     case "CPU":
                     case "DEFAULT":
                     case "ALL":
-                        if (CLExecutorCPU != null)
+                        if (CLExecutorCPU != null){
                             Executor = CLExecutorCPU;
-                        else
+                        }else
                             Executor = null;
                         break;
                     case "GPU":
-                        if (CLExecutorGPU != null)
+                        if (CLExecutorGPU != null){
                             Executor = CLExecutorGPU;
-                        else
+                        }else
                             Executor = null;
                         break;
                 }
                 if (Executor == null) {
                     console.log(type + "do not support CL on the device");
-                    throw new Error(NO_DEVICE_FOUND);
+                    //throw new Error(NO_DEVICE_FOUND);
+                    return false;
                 }
+                return true;
             },
 
             loadData : function (imgData) {

@@ -20,7 +20,7 @@ __kernel void darkCorner(
     if (currbilv < 0) return;
 
     /* according to js version f(currBilv, 0 , 0.02, 0.3, 1)*/
-    float bilv = 3 * 0.02 * currbilv * (1 - currbilv) * (1 - currbilv);
+    float bilv = 3 * 0.02 * currbilv * (1 - currbilv) * (1 - currbilv)
                  + 3 * 0.3 * currbilv * currbilv * (1 - currbilv) 
                  + currbilv * currbilv * currbilv;
     temp -= bilv * lastlevel * temp / 255;

@@ -355,8 +355,8 @@ try{
             P.useWebCL = false;
         } else {
             P.webclDevice = device;
-            P.useWebCL = P.lib.webcl.init(device) &&
-                        (typeof(webcl) != "undefined" || typeof(WebCL) != "undefined");
+            P.useWebCL = (typeof(webcl) != "undefined" || typeof(WebCL) != "undefined") &&
+                         P.lib.webcl.init(device);
         }
         return P.useWebCL;
     };

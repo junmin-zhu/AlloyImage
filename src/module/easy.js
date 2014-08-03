@@ -71,11 +71,10 @@
                             return this.act("灰度处理").act("曲线",[0,60,142,194,255],[0,194,240,247,255])
                     },
                     warmAutumn: function(){
-                        var m = this.clone().act("色相/饱和度调节",36,47,8,true);
-                            //.act("暗角", 6, 150);
+                        var m = this.clone().act("色相/饱和度调节",36,47,8,true).act("暗角", 6, 150);
                             //.act("暗角", 6, 150);
                         return this.add(
-                            m//, "叠加"
+                            m, "叠加"
                         );
                     },
 

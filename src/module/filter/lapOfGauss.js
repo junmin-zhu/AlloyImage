@@ -38,15 +38,22 @@
 
             processCL: function(imgData,arg){
                 var startTime = (new Date()).getTime();
+                var template = [
+                        0,      1,      0,
+                        1,      -4,     1,
+                        0,      1,      0
+                ];
+                var start = -(Math.sqrt(template.length) - 1) / 2;
                 var low = 250;
-
                 var result =  P.lib.webcl.run("borderline",
-                                              [P.lib.webcl.convertArrayToBuffer(imgData.data, "float")])
+                                              [new Int32Array([start]),
+                                               P.lib.webcl.convertArrayToBuffer(template, "int"),
+                                               P.lib.webcl.convertArrayToBuffer(imgData.data, "float")])
                                          .getResult();
                 for (var i = 0; i < result.length; ++i){
-                    if (result[i]){
+                    //if (result[i]){
                         imgData.data[i] = result[i] < low ? result[i] : imgData.data[i];
-                    }
+                    //}
                 }
                 console.log("borderlineCL: " + ((new Date()).getTime() - startTime));
                 return imgData;

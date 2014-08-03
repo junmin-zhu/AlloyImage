@@ -1,45 +1,43 @@
 __kernel void borderline(
-            __global float* output,
+            __global float* io,
             const    int    width,
             const    int    height,
-            __global float* input)
+            const    int    start,
+            __global int*   template,
+            __global float* backup)
 {
-    uint ix = get_global_id(0);
-    uint iy = get_global_id(1);
-    uint realI = (iy * width + ix) * 4; 
+    int ix = get_global_id(0);
+    int iy = get_global_id(1);
+    int realI = (iy * width + ix) * 4; 
 
     if (ix == 0 || iy == 0)
         return;
 
-    if (realI > (width*height - 1)*4)
+    if (ix >= width || iy >= height)
         return;
 
-    int template[9] = { 0, 1, 0, 1, -4, 1, 0, 1, 0 };
-    int start = -1;
-    int pixelArr[3*9];
-    uint index[3] = {0, 0, 0};
+    // 3 means R,G,B; 9 means (2*start+1)*(2*start+1)
+    float pixelArr[3*9] = {0};
     for(int k = start;k <= -start;k ++){
-        int currRow = ix + k;
+        int currRow = iy + k;
         for(int kk = start;kk <= -start;kk ++){
-            int currCol = iy + kk;
+            int currCol = ix + kk;
             int currI = (currRow * width + currCol) * 4;
             for(int j = 0;j < 3;j ++){
                 int tempI = currI + j;
-                if (tempI < width*height*4)
-                    pixelArr[j*9 + index[j]] = input[currI + j];
-                else
-                    pixelArr[j*9 + index[j]] = 0;
-                index[j] = index[j] + 1;
+                if (tempI <= (width*height - 1)*4) {
+                    int index = (k - start) * (2 * (-start) + 1) + (kk - start);
+                    pixelArr[j*9 + index] = backup[tempI];
+                }
             }
         }
     }           
    
     for (int j = 0; j < 3; j++) {
+        io[realI + j] = 0;
         for (int i = 0; i < 9; i ++) {
-            output[realI + j] +=  pixelArr[j*9 + i] * template[i];
+            io[realI + j] +=  pixelArr[j*9 + i] * template[i];
         }
     }
-    if (realI+4 < width*height*4)   
-        output[realI + 4] = input[realI + 4];
 }
 

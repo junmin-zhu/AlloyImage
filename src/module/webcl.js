@@ -78,7 +78,6 @@
             var executor = {
                 init : function(device, src) {
                    //try {
-                   cl.releaseAll();
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
                    program =  context.createProgram(src);
@@ -158,6 +157,7 @@
             if (cl === undefined) {
                 throw new Error(NO_WebCL_FOUND);
             }
+            cl.releaseAll();
             platforms = cl.getPlatforms();
 
             devices["cpu"]= platforms[0].getDevices(cl.DEVICE_TYPE_CPU);

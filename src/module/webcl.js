@@ -99,7 +99,7 @@
                     ioBuffer = context.createBuffer(cl.MEM_READ_WRITE, nBytes,
                                                                  new Float32Array(originImg.data));
                     globalThreads = [width, height];
-                    result = new Float32Array(nBytes);
+                    result = new Float32Array(nRGBA);
                     return this;
                 },
 

@@ -19,7 +19,7 @@
              * @return {Array}
              */
             process: function(imgData, radius, sigma, mode) {
-                if (mode)//(mode)
+                if (P.useWebCL)//(mode)//(mode)
                     this.processCL(imgData, radius, sigma);
                 else
                     this.processJS(imgData, radius, sigma);
@@ -37,7 +37,10 @@
 
                 var startTime = (new Date()).getTime();
                 radius = Math.floor(radius) || 3;
-                sigma = sigma || radius / 3;
+                if (typeof(sigma) == "boolean")
+                    sigma = radius / 3;
+                else
+                    sigma = sigma || radius / 3;
                 
                 a = 1 / (Math.sqrt(2 * Math.PI) * sigma);
                 b = -1 / (2 * sigma * sigma);
@@ -62,9 +65,9 @@
                             if(k >= 0 && k < width){//确保 k 没超出 x 的范围
                                 //r,g,b,a 四个一组
                                 i = (y * width + k) * 4;
-                                r += pixes[i] * gaussMatrix[j + radius];
-                                g += pixes[i + 1] * gaussMatrix[j + radius];
-                                b += pixes[i + 2] * gaussMatrix[j + radius];
+                                r += imgData.data[i] * gaussMatrix[j + radius];
+                                g += imgData.data[i + 1] * gaussMatrix[j + radius];
+                                b += imgData.data[i + 2] * gaussMatrix[j + radius];
                                 // a += pixes[i + 3] * gaussMatrix[j];
                                 gaussSum += gaussMatrix[j + radius];
                             }
@@ -95,9 +98,9 @@
                             }
                         }
                         i = (y * width + x) * 4;
-                        pixes[i] = r / gaussSum;
-                        pixes[i + 1] = g / gaussSum;
-                        pixes[i + 2] = b / gaussSum;
+                        imgData.data[i] = r / gaussSum;
+                        imgData.data[i + 1] = g / gaussSum;
+                        imgData.data[i + 2] = b / gaussSum;
                         // pixes[i] = r ;
                         // pixes[i + 1] = g ;
                         // pixes[i + 2] = b ;
@@ -105,7 +108,6 @@
                     }
                 }
                 //end
-                imgData.data = pixes;
                 console.log("gaussBlurJS: " + ((new Date()).getTime() - startTime));
                 return imgData;
             },
@@ -115,7 +117,10 @@
                 var gaussMatrix = [];
                 var gaussSum = 0;
                 radius = Math.floor(radius) || 3;
-                sigma = sigma || radius / 3;
+                if (typeof(sigma) == "boolean")
+                    sigma = radius / 3;
+                else
+                    sigma = sigma || radius / 3;
                 
                 a = 1 / (Math.sqrt(2 * Math.PI) * sigma);
                 b = -1 / (2 * sigma * sigma);
@@ -130,12 +135,19 @@
                 for (i = 0, len = gaussMatrix.length; i < len; i++) {
                     gaussMatrix[i] /= gaussSum;
                 }
-               var result =  P.lib.webcl.run("gaussBlur",
+               var result =  P.lib.webcl.run("gaussBlurX",
                                             [new Int32Array([radius]),
                                              new Float32Array([sigma]),
                                              P.lib.webcl.convertArrayToBuffer(gaussMatrix, "float"),
                                              P.lib.webcl.convertArrayToBuffer(imgData.data, "float")
-                                            ]).getResult();
+                                            ])
+                                        .run("gaussBlurY",
+                                             [new Int32Array([radius]),
+                                              new Float32Array([sigma]),
+                                              P.lib.webcl.convertArrayToBuffer(gaussMatrix, "float"),
+                                              P.lib.webcl.ioBufferDuplicated()
+                                             ])
+                                        .getResult();
                for (var i = 0; i < result.length; ++i)
                    imgData.data[i] = result[i];
                 console.log("gaussBlurCL: " + ((new Date()).getTime() - startTime));

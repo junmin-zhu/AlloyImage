@@ -72,7 +72,8 @@
                            "curve": null,
                            "embossment": null,
                            "setHSI" : null,
-                           "gaussBlur" : null};
+                           "gaussBlurX" : null,
+                           "gaussBlurY" : null};
             var ioBuffer, result, globalThreads;
             var buffers = [];
             var executor = {

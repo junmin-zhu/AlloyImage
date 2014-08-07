@@ -77,7 +77,6 @@
             var buffers = [];
             var executor = {
                 init : function(device, src) {
-                   //try {
                    context = cl.createContext(device);
                    commandQueue = context.createCommandQueue(device, null);
                    program =  context.createProgram(src);
@@ -85,11 +84,6 @@
                    for (kernelName in kernels) {
                        kernels[kernelName] = program.createKernel(kernelName);
                    }
-                   //} catch(e) {
-                   //    console.log(e);
-                   //    var text = program.getBuildInfo(device,cl.PROGRAM_BUILD_LOG);
-                   //    console.log(text);
-                   //}
                     return this;
                 },
 
@@ -112,7 +106,7 @@
                     }
                     commandQueue.enqueueNDRangeKernel(kernels[kernelName], globalThreads.length,[], globalThreads, []);
                     commandQueue.finish();
-                    commandQueue.enqueueReadBuffer(ioBuffer, true, 0 , nBytes, result);
+                    //commandQueue.enqueueReadBuffer(ioBuffer, true, 0 , nBytes, result);
                     return this;
                 },
 
@@ -134,8 +128,19 @@
                     return buffers[buffers.length -1];
                 },
 
+                ioBufferDuplicated: function() {
+                    buffers[buffers.length] = 
+                        context.createBuffer(cl.MEM_READ_WRITE, nBytes);
+                    commandQueue.enqueueCopyBuffer(ioBuffer, 
+                                                   buffers[buffers.length - 1],
+                                                   0,
+                                                   0,
+                                                   nBytes);
+                    return buffers[buffers.length - 1];
+                },
+
                 getResult : function() {
-                    //ioBuffer.release();
+                    commandQueue.enqueueReadBuffer(ioBuffer, true, 0 , nBytes, result);
                     for (var i = 0; i < buffers.length; i ++)
                         buffers[i].release();
                     buffers = [];
@@ -235,6 +240,10 @@
 
             convertArrayToBuffer: function(arr, type) {
                 return Executor.convertArrayToBuffer(arr, type);
+            },
+
+            ioBufferDuplicated: function() {
+                return Executor.ioBufferDuplicated();  
             },
 
             /**

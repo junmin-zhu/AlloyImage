@@ -9,6 +9,10 @@
 
         var M = {
             process: function(imgData, arg, mode){
+               if (typeof(arguments[arguments.length-1]) == "boolean")
+                   mode = arguments[arguments.length-1];
+               else
+                   return;
                if (mode)
                    this.processCL(imgData, arg);
                else

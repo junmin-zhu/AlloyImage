@@ -19,7 +19,11 @@
              * @return {Array}
              */
             process: function(imgData, radius, sigma, mode) {
-                if (P.useWebCL)//(mode)//(mode)
+                if (typeof(arguments[arguments.length-1]) == "boolean")
+                    mode = arguments[arguments.length-1];
+                else
+                    return;
+                if (mode)
                     this.processCL(imgData, radius, sigma);
                 else
                     this.processJS(imgData, radius, sigma);

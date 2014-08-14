@@ -301,9 +301,8 @@ try{
              * asynchronous always set imgData as a whilte rect and then fill it
              * this is the reason effect failed before
              */
-            if (P.useWebCL && arguments.length > 2){
+            if (P.useWebCL && typeof img == "string")
                 this.webcl.loadData(this.imgData);
-            }
 
             //初始化readyState为ready,readyState表明处理就绪
             this.readyState = 1;
@@ -854,6 +853,8 @@ try{
             func.call(ctx);
             this.imgData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
+            if (P.useWebCL)
+                this.webcl.loadData(this.imgData);
             return this;
         },
 
@@ -951,6 +952,9 @@ try{
 
             this.imgData = tempCtx.getImageData(0, 0, width, height);
 
+            if (P.useWebCL)
+                this.webcl.loadData(this.imgData);
+
             return this;
         },
 
@@ -1045,6 +1049,9 @@ try{
 
             this.context.canvas.width = w;
             this.context.canvas.height = h;
+
+            if (P.useWebCL)
+                this.webcl.loadData(this.imgData);
 
             return this;
         },

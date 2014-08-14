@@ -203,17 +203,24 @@
                 }
                 switch (type) {
                     case "CPU":
-                    case "DEFAULT":
-                    case "ALL":
-                        if (CLExecutorCPU != null){
+                        if (CLExecutorCPU != null)
                             Executor = CLExecutorCPU;
-                        }else
+                        else
                             Executor = null;
                         break;
                     case "GPU":
-                        if (CLExecutorGPU != null){
+                        if (CLExecutorGPU != null)
                             Executor = CLExecutorGPU;
-                        }else
+                        else
+                            Executor = null;
+                        break;
+                    case "DEFAULT":
+                    case "ALL":
+                        if (CLExecutorCPU != null)
+                            Executor = CLExecutorCPU;
+                        else if (CLExecutorGPU != null)
+                            Executor = CLExecutorGPU;
+                        else
                             Executor = null;
                         break;
                 }

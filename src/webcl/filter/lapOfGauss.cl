@@ -10,8 +10,14 @@ __kernel void borderline(
     int iy = get_global_id(1);
     int realI = (iy * width + ix) * 4; 
 
-    if (ix == 0 || iy == 0)
+    if (ix == 0 || iy == 0 || ix == width-1 || iy == height-1) {
+        // take 256 as undefined in the JavaScript.
+        io[realI + 0] = 256;
+        io[realI + 1] = 256;
+        io[realI + 2] = 256;
+        io[realI + 3] = 256;
         return;
+    }
 
     if (ix >= width || iy >= height)
         return;
@@ -39,5 +45,6 @@ __kernel void borderline(
             io[realI + j] +=  pixelArr[j*9 + i] * template[i];
         }
     }
+    io[realI + 3] = 256;
 }
 

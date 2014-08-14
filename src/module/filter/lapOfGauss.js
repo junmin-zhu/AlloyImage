@@ -55,9 +55,9 @@
                                                P.lib.webcl.convertArrayToBuffer(imgData.data, "float")])
                                          .getResult();
                 for (var i = 0; i < result.length; ++i){
-                    //if (result[i]){
+                    if (result[i] < 256){
                         imgData.data[i] = result[i] < low ? result[i] : imgData.data[i];
-                    //}
+                    }
                 }
                 console.log("borderlineCL: " + ((new Date()).getTime() - startTime));
                 return imgData;

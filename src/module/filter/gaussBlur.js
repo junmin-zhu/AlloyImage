@@ -30,7 +30,9 @@
             },
 
             processJS: function(imgData,radius, sigma) {
-                var pixes = imgData.data;
+                var pixes = new Array();
+                for (var i = 0; i < imgData.data.length; ++i)
+                    pixes[i] = imgData.data[i];
                 var width = imgData.width;
                 var height = imgData.height;
                 var gaussMatrix = [],

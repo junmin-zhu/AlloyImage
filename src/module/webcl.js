@@ -25,7 +25,7 @@
                 "before call createWebCLProgram";
 
         /* Global vars */
-        var platforms , devices = [] , context = null, program = null, queue = null;
+        var platforms , devices = {cpu:[], gpu:[]};
         /* Global memory objects */
         /*var inputBuffer = null, outputBuffer = null;*/
         /* Global kernels as mapped type */
@@ -66,7 +66,7 @@
         };
 
         var CLExecutor = function(){
-            var context, commandQueue, program = null, 
+            var context, commandQueue, program = null,
                 kernels = {"borderline": null,
                            "darkCorner": null,
                            "curve": null,
@@ -248,26 +248,6 @@
             },
 
             /**
-             * Create a WebCLContex
-             *
-             * @param {WebCLContextProperties} props
-             * @returns {WebCLContext} context
-             */
-            createContext : function () {
-                var ctx;
-                try {
-                    ctx = cl.createContext(devices);
-                } catch (e) {
-                    if (debug) {
-                        console.error(e);
-                    }
-                    throw e;
-                }
-
-                return ctx;
-            },
-
-            /**
              * Return a device list according required type
              * ALL, CPU or GPU are valid inputs
              *
@@ -289,107 +269,6 @@
             getPlatforms : function () {
                 return platforms;
             },
-
-            /**
-             * Create WebCLProgram using the global WebCLCommon context
-             *
-             * @param {String} src - OpenCL code source
-             * @returns {WebCLProgram} program
-             */
-            createProgram : function (src) {
-                var pm;
-                try {
-                    if (!context) {
-                        throw new Error(INVALID_SEQUENCE);
-                    }
-
-                    pm = context.createProgram(src);
-
-                } catch (e) {
-                    if (debug) {
-                        console.error(e);
-                    }
-                    throw e;
-                }
-
-                return pm;
-            },
-
-            createCommandQueue : function () {
-
-                var cmdQueue;
-                try {
-                    cmdQueue = context.createCommandQueue(devices, null);
-                } catch (e) {
-                    if (debug) {
-                        console.error(e);
-                    }
-                    throw e;
-                }
-
-                return cmdQueue;
-            },
-
-            /**
-             * Create WebCLProgram using the global WebCLCommon context
-             * and buid the kernel source
-             *
-             * @param {String} src - OpenCL code source
-             * @returns {WebCLProgram} program
-             */
-            createProgramBuild : function (src) {
-                var program;
-
-                try {
-                    program  = this.createProgram(src);
-                    program.build(devices, null, null);
-                  
-                } catch (e) {
-                    if (debug) {
-                    var text = program.getBuildInfo(devices[0], cl.PROGRAM_BUILD_LOG);
-                    console.log(text);
-                    console.error(e);
-                    }
-                    throw e;
-                }
-
-                return program;
-            },
-            /*
-            getInputBuffer : function () {
-                return inputBuffer;
-            },
-
-            getOutputBuffer : function () {
-                return outputBuffer;
-            },
-            */
-            getKernel : function (kernelName) {
-                return kernels[kernelName];
-            },
-
-            getCommandQueue : function() {
-                return queue;
-            },
-
-            /**
-             * Load the kernel file and return its content
-             *
-             * @param {String} filePath - Kernel file (*.cl) path
-             * @returns {String} File content
-             */
-            loadKernel : function (filePath) {
-                var res = null;
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", filePath, false);
-                xhr.send();
-                // HTTP reports success with a 200 status, file protocol reports
-                // success with a 0 status
-                if (xhr.status === 200 || xhr.status === 0) {
-                    res = xhr.responseText;
-                }
-                return res;
-            }
         };
         return WebCLCommon;
     });

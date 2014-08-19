@@ -14,6 +14,7 @@
  */
 ;(function(Ps){
 
+try {
     window[Ps].module("webcl",function(P){
         var debug = true;
         var initialized = false;
@@ -279,4 +280,8 @@
         };
         return WebCLCommon;
     });
+} catch (e) {
+    console.log(e);
+    console.log("AI_WARNING: failed to initialize WebCL module");
+}
 })("psLib");

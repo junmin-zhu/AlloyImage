@@ -301,7 +301,7 @@ try{
              * asynchronous always set imgData as a whilte rect and then fill it
              * this is the reason effect failed before
              */
-            if (P.useWebCL && typeof img == "string")
+            if (P.useWebCL && (typeof img == "string" || arguments.length > 2))
                 this.webcl.loadData(this.imgData);
 
             //初始化readyState为ready,readyState表明处理就绪

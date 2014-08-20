@@ -314,8 +314,14 @@ try{
             //加载图片到WebCL
             this.webcl = P.lib.webcl;
 
-            if (P.useWebCL)
-                this.webcl.loadData(this.imgData);
+            if (P.useWebCL){
+                try {
+                    this.webcl.loadData(this.imgData);
+                } catch (e) {
+                    console.log(e);
+                    console.log("AI_WARNING: WebCL module failed to load image data");
+                }
+            }
 
             //初始化readyState为ready,readyState表明处理就绪
             this.readyState = 1;

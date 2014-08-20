@@ -71,7 +71,7 @@ try{
         webclDevice: "DEFAULT",
 
         //当使用WebCL处理图像失败时，是否尝试回退到一般模式进行处理
-        enableWebCLFallback: false,
+        enableWebCLFallback: true,
 
         //外部定义的ps效果
         definedPs: {},

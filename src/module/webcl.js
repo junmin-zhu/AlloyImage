@@ -171,11 +171,23 @@ try {
             devices["gpu"] = platforms[0].getDevices(cl.DEVICE_TYPE_GPU);
             var src = loadKernel(clPath);
             if (devices["cpu"].length) {
-                CLExecutorCPU = new CLExecutor().init(devices["cpu"][0], src);
+                try {
+                    CLExecutorCPU = new CLExecutor().init(devices["cpu"][0], src);
+                } catch (e) {
+                    console.log(e);
+                    console.log("AI_WARNING: WebCL module failed to initialize CPU device");
+                    CLExecutorCPU = null;
+                }
             } else
                 CLExecutorCPU = null;
             if (devices["gpu"].length) {
-                CLExecutorGPU = new CLExecutor().init(devices["gpu"][0], src);
+                try {
+                    CLExecutorGPU = new CLExecutor().init(devices["gpu"][0], src);
+                } catch (e) {
+                    console.log(e);
+                    console.log("AI_WARNING: WebCL module failed to initialize GPU device");
+                    CLExecutorGPU = null;
+                }
             }
             else
                 CLExecutorGPU = null;

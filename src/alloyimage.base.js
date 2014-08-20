@@ -291,17 +291,7 @@ try{
             //加载图片到WebCL
             this.webcl = P.lib.webcl;
 
-            /* 
-             * There are two strategies to create ps object,
-             * one is sychronous: 
-             * transfer imgData, width, height at once,
-             * and the other is asynchronous:
-             * just transfer width, height,
-             * and set imgData using context.putImageData.
-             * asynchronous always set imgData as a whilte rect and then fill it
-             * this is the reason effect failed before
-             */
-            if (P.useWebCL && (typeof img == "string" || arguments.length > 2))
+            if (P.useWebCL)
                 this.webcl.loadData(this.imgData);
 
             //初始化readyState为ready,readyState表明处理就绪

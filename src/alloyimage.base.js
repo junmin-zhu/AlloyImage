@@ -70,6 +70,9 @@ try{
         //选择device作为WebCL后端，如：CPU, GPU, DEFAULT
         webclDevice: "DEFAULT",
 
+        //当使用WebCL处理图像失败时，是否尝试回退到一般模式进行处理
+        enableWebCLFallback: true,
+
         //外部定义的ps效果
         definedPs: {},
 
@@ -150,11 +153,31 @@ try{
                 case "Filter":
                 case "Alteration":
 
-                    return this.lib[spaceName][actName].process(imgData, args, this.useWebCL);
+                    if (this.useWebCL && this.enableWebCLFallback) {
+                        try {
+                            return this.lib[spaceName][actName].process(imgData, args, true);
+                        } catch (e) {
+                            console.log(e);
+                            console.log("AI_WARNING: failed to process the image with WebCL, falling back");
+                            return this.lib[spaceName][actName].process(imgData, args, false);
+                        }
+                    } else {
+                        return this.lib[spaceName][actName].process(imgData, args, this.useWebCL);
+                    }
                     //break;
 
                 case "ComEffect":
-                    return this.lib[actName].process(imgData, args, this.useWebCL);
+                    if (this.useWebCL && this.enableWebCLFallback) {
+                        try {
+                            return this.lib[actName].process(imgData, args, true);
+                        } catch (e) {
+                            console.log(e);
+                            console.log("AI_WARNING: failed to process the image with WebCL, falling back");
+                            return this.lib[actName].process(imgData, args, false);
+                        }
+                    } else {
+                        return this.lib[actName].process(imgData, args, this.useWebCL);
+                    }
                     //break;
 
                 default:
@@ -291,8 +314,14 @@ try{
             //加载图片到WebCL
             this.webcl = P.lib.webcl;
 
-            if (P.useWebCL)
-                this.webcl.loadData(this.imgData);
+            if (P.useWebCL){
+                try {
+                    this.webcl.loadData(this.imgData);
+                } catch (e) {
+                    console.log(e);
+                    console.log("AI_WARNING: WebCL module failed to load image data");
+                }
+            }
 
             //初始化readyState为ready,readyState表明处理就绪
             this.readyState = 1;
@@ -344,10 +373,25 @@ try{
             P.useWebCL = false;
         } else {
             P.webclDevice = device;
-            P.useWebCL = (typeof(webcl) != "undefined" || typeof(WebCL) != "undefined") &&
-                         P.lib.webcl.init(device);
+            try {
+                P.useWebCL = (typeof(webcl) != "undefined" || typeof(WebCL) != "undefined") &&
+                             P.lib.webcl.init(device);
+            } catch (e) {
+                console.log(e);
+                console.log("AI_WARNING: failed to set WebCL device, WebCL will not be used");
+                P.useWebCL = false;
+            }
         }
         return P.useWebCL;
+    };
+
+    //当使用WebCL处理图像失败时，是否尝试回退到一般模式进行处理
+    window[Ps].setWebCLFallbackEnabled = function(mode){
+        if (typeof(mode) == "boolean") {
+            P.enableWebCLFallback = mode;
+        } else {
+            throw "setWebCLFallbackEnabled: invalid argument type";
+        }
     };
 
     //获取配置信息
@@ -650,7 +694,11 @@ try{
             tempPsLib.context.putImageData(this.imgData, 0, 0);
             tempPsLib.imgData = tempPsLib.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
             if (P.useWebCL) { // clone function always stands for ps effect start, need load Image
-                tempPsLib.webcl.loadData(tempPsLib.imgData);
+                try {
+                    tempPsLib.webcl.loadData(tempPsLib.imgData);
+                } catch (e) {
+                    console.log(e);
+                }
             }
             /*
             tempPsLib.add(this);

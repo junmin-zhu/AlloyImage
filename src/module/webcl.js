@@ -3,14 +3,10 @@
  * like get context using CPU or GPU, build program and
  * create commandQueue
  *
- * Eg:
- *
- *  WebCLCommon.init("ALL");
- *  var ctx = WebCLCommon.createContext();
- *  var program = WebCLCommon.createProgramBuild(kernelSrc);
- *  var cmdQueue = WebCLCommon.createCommandQueue();
- *
  * @author Alexandre Rocha <alerock@gmail.com>
+ *         Shaobo Yan <shaobo.yan@intel.com>
+ *         Jiajie Hu <jiajie.hu@intel.com>
+ *         Junmin Zhu <junmin.zhu@intel.com>
  */
 ;(function(Ps){
 
